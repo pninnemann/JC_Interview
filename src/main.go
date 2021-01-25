@@ -11,6 +11,7 @@ func homePage(res http.ResponseWriter, req *http.Request)  {
 }
 
 func startListener() {
+	log.Println("RestAPI Server running on http://0.0.0.0:8080/json-rpc")
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/json-rpc", restAPI)
 	log.Fatal(http.ListenAndServe(":8080", nil))

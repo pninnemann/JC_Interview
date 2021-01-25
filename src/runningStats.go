@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"sync"
 )
 
@@ -62,15 +63,15 @@ func getStats() string {
 	var stats []ActionStat
 	Mux.Lock()
 	for _, action := range totals {
-		var stat = ActionStat{action.Action, action.Time/float64(action.Count)}
+		var stat = ActionStat{action.Action, math.Round(action.Time/float64(action.Count)*100)/100} //Round to the nearest 2 decimals
 		stats = append(stats, stat)
 	}
 	Mux.Unlock()
 
 	resJson, err := json.Marshal(stats)
 	if err != nil {
-		log.Println("Error occured marshalling stats", err)
-		return "Error occured marshalling stats"
+		log.Println("Error occurred marshalling stats", err)
+		return "Error occurred marshalling stats"
 	}
 	return string(resJson)
 }

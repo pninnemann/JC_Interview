@@ -50,6 +50,7 @@ func restAPI(res http.ResponseWriter, req *http.Request, )  {
 }
 
 func (call *Call) AddAction() {
+	log.Println("AddAction Called")
 	var newActions []ActionInput
 	var newAction ActionInput
 
@@ -73,7 +74,9 @@ func (call *Call) AddAction() {
 	for _, action := range newActions {
 		resJson, err := json.Marshal(action)
 		if err != nil {
-			log.Println("Error occured marshalling validMethods", err)
+			log.Println("Error occurred marshalling Input actions", err)
+			call.Res.WriteHeader(500)
+			fmt.Fprintf(call.Res, "Error occurred marshalling Input actions")
 			return
 		}
 		addAction(string(resJson))
@@ -98,13 +101,18 @@ func (call *Call) GetStats(){
 	output := getStats()
 
 	log.Println(output)
+	if output == "Error occurred marshalling stats" {
+		call.Res.WriteHeader(500)
+		fmt.Fprintf(call.Res, output)
+		return
+	}
 	call.Res.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(call.Res, output)
 }
 
 func (call *Call) GetTotals() {
 	log.Println("GetTotals Called")
-	var totals []ActionTotal
+	var retTotals []ActionTotal // Convert from map to array
 
 	if len(totals) == 0 {
 		log.Println("No Stats logged")
@@ -115,14 +123,15 @@ func (call *Call) GetTotals() {
 
 	Mux.Lock()
 	for _, action := range totals {
-		totals = append(totals, action)
+		retTotals = append(retTotals, action)
 	}
 	Mux.Unlock()
 
-	resJson, err := json.Marshal(totals)
+	resJson, err := json.Marshal(retTotals)
 	if err != nil {
-		log.Println("Error occured marshalling validMethods", err)
+		log.Println("Error occurred marshalling return Totals", err)
 		call.Res.WriteHeader(500)
+		fmt.Fprintf(call.Res, "Error occurred marshalling return Totals")
 		return
 	}
 	log.Println(string(resJson))
@@ -137,10 +146,11 @@ func (call *Call) ResetStats() {
 		delete(totals, action)
 	}
 	Mux.Unlock()
-	log.Println(totals)
+	fmt.Fprintf(call.Res, "Stats Reset")
 }
 
 func (call *Call) GetAPI() {
+	log.Println("GetAPI Called")
 	callType := reflect.TypeOf(call)
 	var validMethods ValidMethods
 	for i := 0; i < callType.NumMethod(); i++ {
@@ -149,7 +159,7 @@ func (call *Call) GetAPI() {
 
 	resJson, err := json.Marshal(validMethods)
 	if err != nil {
-		log.Println("Error occured marshalling validMethods", err)
+		log.Println("Error occurred marshalling validMethods", err)
 		call.Res.WriteHeader(500)
 		return
 	}
